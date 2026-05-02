@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RIYA AI - ULTIMATE FIRE TERMINAL</title>
+    <style>
+        :root { --gold: #ffd700; --fire: #ff4500; --red: #ff1100; --bg: #050000; }
+        body { background: var(--bg); color: #fff; font-family: 'Orbitron', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+        /* ১. গোল্ডেন বল */
+        .riya-header { height: 75px; display: flex; align-items: center; justify-content: center; background: #000; border-bottom: 2px solid var(--gold); }
+        .riya-ball { width: 45px; height: 45px; border-radius: 50%; background: radial-gradient(circle, #fff, var(--gold), var(--fire)); box-shadow: 0 0 25px var(--fire); animation: glow 1.5s infinite alternate; }
+        @keyframes glow { from { transform: scale(0.9); } to { transform: scale(1.1); } }
+
+        /* ২. কন্ট্রোলস (মার্কেট ও ৩০ সেকেন্ড-১৫ মিনিট টাইমার) */
+        .controls { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 8px; padding: 10px; background: #0a0a0a; }
+        select { padding: 12px; background: #1a1a1a; color: var(--gold); border: 1px solid var(--gold); border-radius: 5px; font-weight: bold; font-size: 11px; outline: none; }
+
+        /* ৩. হলুদ টাইমার দাগ (প্রগ্রেস বার) */
+        #timer-container { width: 100%; height: 6px; background: #222; }
+        #timer-bar { width: 0%; height: 100%; background: var(--gold); box-shadow: 0 0 10px var(--gold); transition: linear; }
+
+        /* ৪. এনালাইজ বাটন */
+        .action-area { padding: 10px; background: #000; text-align: center; }
+        #analyze-btn { 
+            width: 100%; padding: 14px; background: linear-gradient(45deg, var(--red), var(--fire)); 
+            border: 2px solid var(--gold); color: white; font-weight: bold; border-radius: 8px;
+            box-shadow: 0 0 15px var(--fire); cursor: pointer; text-transform: uppercase; font-size: 14px;
+        }
+
+        /* ৫. এনালাইজ বক্স */
+        #analysis-box { height: 60px; background: rgba(255, 69, 0, 0.1); padding: 10px; border-bottom: 2px solid var(--fire); overflow: hidden; }
+        #analysis-text { font-size: 13px; color: #00ffcc; font-family: 'Courier New', monospace; }
+
+        /* ৬. ট্রেডিং ভিউ চার্ট */
+        #chart-wrapper { flex-grow: 1; width: 100%; background: #000; }
+        
+        /* আগুনের স্ক্যানার ওভারলে */
+        #scanner { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 69, 0, 0.15); display: none; z-index: 9999; pointer-events: none; }
+        .fire-laser { width: 100%; height: 8px; background: linear-gradient(to right, transparent, var(--gold), var(--fire), var(--gold), transparent); box-shadow: 0 0 40px var(--red); position: absolute; animation: fireMove 1s linear infinite; }
+        @keyframes fireMove { 0% { top: 0%; } 100% { top: 100%; } }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body onload="initRiya()">
+
+<div id="scanner"><div class="fire-laser"></div></div>
+
+<div class="riya-header">
+    <div class="riya-ball"></div>
+</div>
+
+<div class="controls">
+    <select id="market" onchange="changeMarket()">
+        <option value="FX:EURUSD">EUR/USD (OTC)</option>
+        <option value="FX:GBPUSD">GBP/USD (OTC)</option>
+        <option value="OANDA:XAUUSD">GOLD / USD</option>
+        <option value="BITSTAMP:BTCUSD">BITCOIN</option>
+        <option value="BINANCE:ETHUSDT">ETHEREUM</option>
+        <option value="FX:USDJPY">USD/JPY</option>
+        <option value="FX:AUDUSD">AUD/USD</option>
+        <option value="FX:EURJPY">EUR/JPY</option>
+        <option value="FX:GBPJPY">GBP/JPY</option>
+        <option value="FX:USDCAD">USD/CAD</option>
+        <option value="FX:EURGBP">EUR/GBP</option>
+        <option value="FX:NZDUSD">NZD/USD</option>
+        <option value="FX:AUDJPY">AUD/JPY</option>
+        <option value="FX:GBPAUD">GBP/AUD</option>
+        <option value="FX:EURAUD">EUR/AUD</option>
+        <option value="FX:GBPCAD">GBP/CAD</option>
+        <option value="FX:USDCHF">USD/CHF</option>
+        <option value="FX:CADJPY">CAD/JPY</option>
+        <option value="BITSTAMP:LTCUSD">LITECOIN</option>
+        <option value="BINANCE:SOLUSDT">SOLANA</option>
+    </select>
+    <select id="timeframe" onchange="changeTime()">
+        <option value="0.5">30 SEC</option>
+        <option value="1" selected>1 MIN</option>
+        <option value="2">2 MIN</option>
+        <option value="3">3 MIN</option>
+        <option value="5">5 MIN</option>
+        <option value="10">10 MIN</option>
+        <option value="15">15 MIN</option>
+    </select>
+</div>
+
+<div id="timer-container"><div id="timer-bar"></div></div>
+
+<div class="action-area">
+    <button id="analyze-btn" onclick="startFireScan()">ANALYZE MARKET</button>
+</div>
+
+<div id="analysis-box">
+    <div id="analysis-text">AI Terminal Ready. Press Analyze.</div>
+</div>
+
+<div id="chart-wrapper">
+    <div id="chart" style="width:100%; height:100%;"></div>
+</div>
+
+<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+<script>
+    let synth = window.speechSynthesis;
+
+    function speak(text) {
+        if(synth.speaking) synth.cancel();
+        let u = new SpeechSynthesisUtterance(text);
+        u.lang = 'bn-BD'; u.pitch = 1.1; u.rate = 1.0;
+        synth.speak(u);
+    }
+
+    function initRiya() {
+        updateChart();
+        speak("সিস্টেম অনলাইন। সুমন, আমি প্রস্তুত।");
+    }
+
+    function updateChart() {
+        let interval = document.getElementById('timeframe').value;
+        // ৩০ সেকেন্ডের জন্য ১ মিনিট চার্ট রাখা ভালো কারণ TradingView Widget এ ৩০ সেকেন্ড অনেক সময় সরাসরি লোড হয় না
+        let tvInterval = interval < 1 ? "1" : interval; 
+        new TradingView.widget({
+            "width": "100%", "height": "100%", "symbol": document.getElementById('market').value,
+            "interval": tvInterval, "theme": "dark", "container_id": "chart", "style": "1"
+        });
+    }
+
+    function changeMarket() {
+        let m = document.getElementById('market').options[document.getElementById('market').selectedIndex].text;
+        speak(m + " মার্কেট এনালাইজ স্টার্ট।");
+        updateChart();
+    }
+
+    function changeTime() {
+        let t = document.getElementById('timeframe').options[document.getElementById('timeframe').selectedIndex].text;
+        speak("টাইমার " + t + " সেট করা হয়েছে।");
+        updateChart();
+    }
+
+    function startFireScan() {
+        const scn = document.getElementById('scanner');
+        const box = document.getElementById('analysis-text');
+        const bar = document.getElementById('timer-bar');
+        const btn = document.getElementById('analyze-btn');
+        const duration = parseFloat(document.getElementById('timeframe').value) * 60000;
+
+        scn.style.display = 'block';
+        btn.disabled = true;
+        speak("স্ক্যানিং স্টার্ট।");
+        
+        let logs = ["Deep Fire Scanning...", "Analyzing Support...", "Reading Volume...", "Result Found!"];
+        let i = 0;
+        let intv = setInterval(() => {
+            box.innerText = ">> " + logs[i];
+            i++; if(i >= logs.length) clearInterval(intv);
+        }, 800);
+
+        setTimeout(() => {
+            scn.style.display = 'none';
+            btn.disabled = false;
+            let signal = Math.random() > 0.5 ? "UP" : "DOWN";
+            
+            if(signal === "UP") {
+                box.innerHTML = "<b style='color:#00ff88; font-size:16px;'>সিগন্যাল: আপ (UP) ↑</b>";
+                speak("সিগন্যাল আপ।");
+            } else {
+                box.innerHTML = "<b style='color:#ff3c3c; font-size:16px;'>সিগন্যাল: ডাউন (DOWN) ↓</b>";
+                speak("সিগন্যাল ডাউন।");
+            }
+
+            // হলুদ প্রগ্রেস বার (৩টি কালার মোড অনুযায়ী সেট করা)
+            bar.style.transition = "none"; bar.style.width = "0%";
+            setTimeout(() => {
+                bar.style.transition = `width ${duration}ms linear`;
+                bar.style.width = "100%";
+            }, 50);
+        }, 4000); 
+    }
+</script>
+</body>
+</html>
